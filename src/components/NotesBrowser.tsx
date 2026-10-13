@@ -169,7 +169,7 @@ export function NotesBrowser({notes}: {notes: BrowserNote[]}) {
           type="search"
           value={query}
           onChange={(event) => setQuery(event.target.value)}
-          placeholder="Tìm bài, công thức, từ khoá…"
+          placeholder="Tìm bài, công thức…"
           aria-label="Tìm trong các bài"
           enterKeyHint="search"
           autoComplete="off"
