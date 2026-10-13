@@ -1,6 +1,7 @@
 import {
   LABEL_COLORS,
   parseLabels,
+  parseTableTips,
   parseZones,
   parsePoint,
   parsePoints,
@@ -26,6 +27,8 @@ const DIAMOND_OFFSET = CUSHION + WOOD / 2
 // Lề ngoài khung bàn, cho số toạ độ và các nhãn có màu ghi bên ngoài bàn
 const MARGIN = 62
 const BALL_R = 15
+// Trái bi nhỏ chỉ điểm chạm cơ đặt trên mặt bàn
+const TIP_R = 62
 
 const BALL_FILL = {white: '#fafafa', yellow: '#f5c518', red: '#d92b2b'} as const
 // Màu tô vùng trên mặt nỉ: nhạt hơn màu nhãn để số và đường bi vẫn nổi
@@ -200,6 +203,30 @@ export function BidaTable({value, axis}: {value?: BidaDiagramValue; axis?: boole
               points={`${tip.x},${tip.y} ${base.x - uy * 11},${base.y + ux * 11} ${base.x + uy * 11},${base.y - ux * 11}`}
               fill={stroke}
             />
+          </g>
+        )
+      })}
+
+      {parseTableTips(value?.tips).map((tip, index) => {
+        const centre = toSvg(tip.point, portrait)
+        const radians = (tip.angle * Math.PI) / 180
+        // 3 đầu cơ = vòng thứ 3 trong 5 vòng
+        const dot = {x: centre.x + Math.sin(radians) * TIP_R * 0.6, y: centre.y - Math.cos(radians) * TIP_R * 0.6}
+        return (
+          <g key={index}>
+            <circle cx={centre.x} cy={centre.y} r={TIP_R} fill="#ffffff" fillOpacity={0.92} stroke="#171717" strokeWidth={2} />
+            <g fill="none" stroke="#171717" strokeOpacity={0.45} strokeWidth={1}>
+              {[1, 2, 3, 4].map((ring) => (
+                <circle key={ring} cx={centre.x} cy={centre.y} r={(TIP_R * ring) / 5} />
+              ))}
+              {Array.from({length: 8}, (_, spoke) => {
+                const angle = (spoke * Math.PI) / 8
+                const dx = Math.sin(angle) * TIP_R
+                const dy = Math.cos(angle) * TIP_R
+                return <line key={spoke} x1={centre.x - dx} y1={centre.y - dy} x2={centre.x + dx} y2={centre.y + dy} />
+              })}
+            </g>
+            <circle cx={dot.x} cy={dot.y} r={9} fill="#e11d2a" />
           </g>
         )
       })}

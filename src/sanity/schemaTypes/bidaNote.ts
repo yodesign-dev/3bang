@@ -225,6 +225,13 @@ export default defineType({
               description: 'Mỗi dòng 1 vùng: "@màu x,y x,y x,y …" là các đỉnh của vùng theo thứ tự. Vd. "@vàng 0,3 0,0 7,0". Dùng để chia bàn thành khu.',
             }),
             defineField({
+              name: 'tips',
+              title: 'Trái bi chỉ điểm chạm',
+              type: 'text',
+              rows: 3,
+              description: 'Mỗi dòng "x,y P4" hoặc "x,y T3": vẽ 1 trái bi nhỏ tại x,y với chấm đỏ ở hướng phê đó (P = phải, T = trái, bậc 0–4), 3 đầu cơ.',
+            }),
+            defineField({
               name: 'legend',
               title: 'Chú giải màu',
               type: 'text',

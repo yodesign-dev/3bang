@@ -54,6 +54,7 @@ export type BidaDiagramValue = {
   paths?: BidaDiagramPath[]
   labels?: string
   zones?: string
+  tips?: string
   legend?: string
   portrait?: boolean
   showAxis?: boolean
@@ -128,6 +129,22 @@ export function parseZones(input?: string): {color: LabelColor; points: Pt[]}[] 
       return color && points.length >= 3 ? {color, points} : null
     })
     .filter((zone) => zone !== null)
+}
+
+// Trái bi nhỏ đặt trên mặt bàn để chỉ điểm chạm cơ cho khu đó, mỗi dòng
+// "x,y P4" hoặc "x,y T3": vị trí trên bàn + hướng phê theo thang quanh mặt bi
+// (xem parseCueTips), chạm ở 3 đầu cơ.
+export function parseTableTips(input?: string): {point: Pt; angle: number}[] {
+  return (input ?? '')
+    .split('\n')
+    .map((line) => {
+      const match = line.trim().match(new RegExp(`^${POINT.source}\\s+([TP])\\s*([0-4](?:\\.5)?)$`, 'i'))
+      if (!match) return null
+      const point = {x: Number(match[1]), y: Number(match[2])}
+      const side = match[3].toUpperCase() === 'P' ? 1 : -1
+      return inTable(point) ? {point, angle: side * Number(match[4]) * 22.5} : null
+    })
+    .filter((tip) => tip !== null)
 }
 
 // Chú giải màu dưới sơ đồ, mỗi dòng "@màu chữ": "@đen Số xuất phát".
