@@ -5,7 +5,7 @@
 export const BIDA_TITLE = 'Bida 3 băng'
 
 // Domain chính thức — dùng cho canonical, sitemap, ảnh chia sẻ.
-export const BIDA_URL = 'https://3bang.applebin.me'
+export const BIDA_URL = 'https://3bang4u.applebin.me'
 export const BIDA_DESCRIPTION =
   'Tổng hợp hệ thống, công thức, kỹ thuật và thế bóng mẫu của bida carom 3 băng — có sơ đồ bàn và video minh hoạ.'
 
