@@ -158,3 +158,66 @@ export function parseCueTips(input?: string): CueTip[] {
     })
     .filter((tip) => tip !== null)
 }
+
+// --- Tab trong bài và tìm kiếm ---------------------------------------------
+
+// Bỏ dấu tiếng Việt và viết thường, GIỮ NGUYÊN độ dài chuỗi (mỗi ký tự ra đúng
+// 1 ký tự) để vị trí tìm thấy trên chuỗi đã bỏ dấu dùng được trên chuỗi gốc.
+// Nhờ vậy gõ "ep phe" vẫn ra "ép phê".
+export function foldText(input: string): string {
+  let out = ''
+  for (const char of input.normalize('NFC')) {
+    const base = char === 'đ' || char === 'Đ' ? 'd' : char.normalize('NFD')[0]
+    out += char.length === 1 ? base.toLowerCase() : char
+  }
+  return out
+}
+
+export function slugify(input: string): string {
+  return foldText(input)
+    .replace(/[^a-z0-9]+/g, '-')
+    .replace(/^-+|-+$/g, '')
+}
+
+// eslint-disable-next-line @typescript-eslint/no-explicit-any
+type Block = any
+
+// Chữ đọc được của 1 khối nội dung, để tìm kiếm.
+function blockText(block: Block): string {
+  switch (block?._type) {
+    case 'block':
+      return (block.children ?? []).map((child: {text?: string}) => child.text ?? '').join('')
+    case 'formula':
+      return [block.title, block.expression, block.note].filter(Boolean).join('. ')
+    case 'table':
+      return (block.rows ?? []).map((row: {cells?: string[]}) => (row.cells ?? []).join(' · ')).join('. ')
+    case 'cueBall':
+      return [...parseCueTips(block.tips).map((tip) => tip.label), block.caption].filter(Boolean).join('. ')
+    default:
+      return block?.caption ?? ''
+  }
+}
+
+export type NoteSection = {id: string; title: string; label: string; text: string; blocks: Block[]}
+
+// Cắt nội dung bài thành từng phần theo tiêu đề lớn (H2). Mỗi phần là 1 tab
+// ở trang bài và 1 đơn vị kết quả ở ô tìm kiếm. Chữ đứng trước tiêu đề đầu
+// tiên (nếu có) thành phần mở đầu, id rỗng.
+export function splitSections(body: Block[] | undefined): NoteSection[] {
+  const sections: NoteSection[] = []
+  for (const block of body ?? []) {
+    const isHeading = block?._type === 'block' && block.style === 'h2'
+    if (isHeading || sections.length === 0) {
+      const title = isHeading ? blockText(block).trim() : ''
+      // Nhãn tab lấy phần trước dấu hai chấm: "Ép phê: chạm cơ vào đâu…" → "Ép phê"
+      const label = title.split(':')[0].trim()
+      let id = slugify(label)
+      while (id && sections.some((section) => section.id === id)) id += '-2'
+      sections.push({id, title, label, text: '', blocks: []})
+    }
+    const section = sections[sections.length - 1]
+    section.blocks.push(block)
+    if (!isHeading) section.text += `${blockText(block)} `
+  }
+  return sections.map((section) => ({...section, text: section.text.replace(/\s+/g, ' ').trim()}))
+}

@@ -3,7 +3,8 @@ import type {Metadata} from 'next'
 import {notFound} from 'next/navigation'
 import {PortableText} from '@portabletext/react'
 import {client} from '@/sanity/lib/client'
-import {BIDA_TITLE, bidaCategoryTitle, bidaOgImage} from '@/lib/bida'
+import {BIDA_TITLE, bidaCategoryTitle, bidaOgImage, splitSections} from '@/lib/bida'
+import {ArticleTabs} from '@/components/ArticleTabs'
 import {portableTextComponents} from '@/components/blocks'
 
 export const revalidate = 60
@@ -89,6 +90,11 @@ export default async function BidaNotePage({params}: {params: Promise<{slug: str
   if (!note) notFound()
 
   const hasSource = Boolean(note.sourceName || note.sourceUrl)
+  // Bài có từ 3 tiêu đề lớn trở lên thì chia tab; bài ngắn đọc liền một mạch.
+  const sections = splitSections(note.body)
+  const intro = sections[0]?.id === '' ? sections[0] : null
+  const tabbed = sections.filter((section) => section.id !== '')
+  const useTabs = tabbed.length >= 3
 
   return (
     <div className="min-h-screen bg-white text-neutral-900 antialiased">
@@ -119,7 +125,19 @@ export default async function BidaNotePage({params}: {params: Promise<{slug: str
           )}
 
           <div className="mt-8">
-            <PortableText value={note.body ?? []} components={portableTextComponents} />
+            {useTabs ? (
+              <>
+                {intro && <PortableText value={intro.blocks} components={portableTextComponents} />}
+                <ArticleTabs
+                  tabs={tabbed.map(({id, label}) => ({id, label}))}
+                  panels={tabbed.map((section) => (
+                    <PortableText key={section.id} value={section.blocks} components={portableTextComponents} />
+                  ))}
+                />
+              </>
+            ) : (
+              <PortableText value={note.body ?? []} components={portableTextComponents} />
+            )}
           </div>
 
           {hasSource && (
