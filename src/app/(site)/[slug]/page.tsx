@@ -109,10 +109,10 @@ export default async function BidaNotePage({params}: {params: Promise<{slug: str
 
       <main className="mx-auto max-w-3xl px-6 py-10 sm:px-8 sm:py-16">
         <article>
-          <p className="text-xs font-semibold uppercase tracking-widest text-brand">
+          <p className="text-xs font-bold uppercase tracking-widest text-brand">
             {bidaCategoryTitle(note.category)}
           </p>
-          <h1 className="mt-3 text-3xl font-semibold leading-tight tracking-tight text-neutral-900 sm:text-4xl">
+          <h1 className="mt-3 text-[30px] font-extrabold leading-[1.15] tracking-tight text-neutral-950 sm:text-[42px]">
             {note.title}
           </h1>
           {note.excerpt && <p className="mt-4 text-lg leading-relaxed text-neutral-600">{note.excerpt}</p>}

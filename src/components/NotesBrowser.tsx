@@ -278,7 +278,7 @@ export function NotesBrowser({notes}: {notes: BrowserNote[]}) {
                     <p className="text-xs font-semibold uppercase tracking-widest text-brand">
                       {bidaCategoryTitle(note.category)}
                     </p>
-                    <h2 className="mt-2 text-xl font-semibold leading-snug text-neutral-900 transition-colors group-hover:text-neutral-600 lg:mt-1.5 lg:text-base">
+                    <h2 className="mt-2 text-xl font-bold leading-snug text-neutral-950 transition-colors group-hover:text-neutral-600 lg:mt-1.5 lg:text-base">
                       {note.title}
                     </h2>
                     {/* Cột trái trên màn hình lớn: thẻ chỉ còn nhóm, tiêu đề, công thức để danh sách gọn */}

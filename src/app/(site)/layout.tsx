@@ -38,7 +38,7 @@ export default async function SiteLayout({children}: {children: React.ReactNode}
       sidebar={
         <>
           <header className="border-b border-neutral-200 px-6 py-10 lg:px-5 lg:py-6">
-            <Link href="/" className="text-3xl font-semibold tracking-tight text-neutral-900 lg:text-2xl">
+            <Link href="/" className="text-3xl font-extrabold tracking-tight text-neutral-950 lg:text-2xl">
               {BIDA_TITLE}
             </Link>
             <p className="mt-2 text-neutral-500 lg:text-sm">

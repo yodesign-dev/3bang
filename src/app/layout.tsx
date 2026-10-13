@@ -9,7 +9,7 @@ import {BIDA_DESCRIPTION, BIDA_TITLE, BIDA_URL, bidaOgImage} from '@/lib/bida'
 const sans = Be_Vietnam_Pro({
   variable: '--font-text',
   subsets: ['latin', 'vietnamese'],
-  weight: ['400', '500', '600', '700'],
+  weight: ['400', '500', '600', '700', '800'],
   style: ['normal', 'italic'],
 })
 

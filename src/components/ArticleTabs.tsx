@@ -84,10 +84,10 @@ export function ArticleTabs({
             aria-controls={`panel-${tab.id}`}
             tabIndex={index === active ? 0 : -1}
             onClick={() => select(index)}
-            className={`min-h-12 shrink-0 cursor-pointer border-b-2 px-3 text-[15px] font-semibold transition ${
+            className={`min-h-12 shrink-0 cursor-pointer border-b-[3px] px-3 text-[15px] transition ${
               index === active
-                ? 'border-brand text-brand'
-                : 'border-transparent text-neutral-500 hover:text-neutral-900'
+                ? 'border-brand font-bold text-brand'
+                : 'border-transparent font-medium text-neutral-500 hover:text-neutral-900'
             }`}
           >
             {tab.label}
