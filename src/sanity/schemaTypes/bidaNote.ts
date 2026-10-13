@@ -234,7 +234,7 @@ export default defineType({
         defineArrayMember({
           type: 'object',
           name: 'cueBall',
-          title: 'Điểm chạm cơ (phê)',
+          title: 'Điểm chạm cơ (ép phê)',
           components: {input: CueBallInput},
           fields: [
             defineField({
@@ -243,10 +243,10 @@ export default defineType({
               type: 'text',
               rows: 5,
               description:
-                'Mỗi dòng 1 điểm: "giờ độ-lệch nhãn". Giờ theo mặt đồng hồ nhìn từ sau cơ (3 = bên phải, 2.5 = 2 giờ rưỡi); độ lệch tính bằng số đầu cơ từ tâm (0 = đúng tâm, tối đa 1.4). Vd. "3 1 Phê phải" hoặc "0 0 Đúng tâm".',
+                'Mỗi dòng 1 điểm. Ép phê cao cơ theo mức 0–4: "P3 nhãn" (bên phải mức 3) hoặc "T2 nhãn" (bên trái mức 2). Điểm bất kỳ: "giờ vòng nhãn", giờ theo mặt đồng hồ nhìn từ sau cơ, vòng 0–5 (0 = đúng tâm, 5 = mép bi), vd. "6 2 Thấp cơ".',
               validation: (Rule) =>
                 Rule.required().custom((value) =>
-                  !value || parseCueTips(value).length > 0 ? true : 'Mỗi dòng dạng "giờ độ-lệch nhãn", vd. "3 1 Phê phải".',
+                  !value || parseCueTips(value).length > 0 ? true : 'Mỗi dòng dạng "P3 nhãn", "T2 nhãn" hoặc "giờ vòng nhãn".',
                 ),
             }),
             defineField({name: 'caption', title: 'Chú thích', type: 'string'}),

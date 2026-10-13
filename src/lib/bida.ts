@@ -135,26 +135,38 @@ export function parseYouTube(url?: string): {id: string; start: number; vertical
   return {id, start, vertical}
 }
 
-// --- Điểm chạm cơ (phê) ----------------------------------------------------
-// Nhìn trái bi cái từ phía sau cơ như mặt đồng hồ. Mỗi dòng 1 điểm chạm:
-// "giờ độ-lệch nhãn", vd. "3 1 Phê phải". Giờ từ 0 đến 12 (2.5 = 2 giờ rưỡi);
-// độ lệch tính bằng số đầu cơ kể từ tâm (0 = đúng tâm, tối đa 1.4 — xa hơn
-// là trượt cơ).
+// --- Điểm chạm cơ (ép phê) -------------------------------------------------
+// Trái bi cái nhìn từ phía sau cơ, chia lưới như bia bắn: 5 vòng tròn (vòng 5
+// là mép bi) và các tia cách nhau 22.5°. Mỗi dòng 1 điểm chạm, 2 cách ghi:
+//   "P3 nhãn" / "T2 nhãn" — ép phê cao cơ bên Phải / bên Trái, mức 0–4 theo
+//       cách gọi quen thuộc: mức 0 ở chính giữa phía trên, mỗi mức lệch thêm
+//       22.5°, mức 4 nằm ngang tâm. Số ghi trong chấm là số mức.
+//   "giờ vòng nhãn" — điểm bất kỳ: giờ theo mặt đồng hồ (0–12, 1.5 = 1 giờ
+//       rưỡi), vòng 0–5 (0 = đúng tâm). Chấm được đánh số theo thứ tự.
 
-export const MAX_TIP_OFFSET = 1.4
+export const CUE_RINGS = 5
+const LEVEL_RING = 4
 
-export type CueTip = {clock: number; offset: number; label: string}
+export type CueTip = {angle: number; ring: number; mark: string | null; label: string}
 
 export function parseCueTips(input?: string): CueTip[] {
   return (input ?? '')
     .split('\n')
-    .map((line) => {
-      const match = line.trim().match(/^(\d+(?:\.\d+)?)\s+(\d+(?:\.\d+)?)(?:\s+(.*))?$/)
-      if (!match) return null
-      const clock = Number(match[1])
-      const offset = Number(match[2])
-      if (clock > 12 || offset > MAX_TIP_OFFSET) return null
-      return {clock, offset, label: (match[3] ?? '').trim()}
+    .map((line): CueTip | null => {
+      const text = line.trim()
+      const level = text.match(/^([TP])\s*([0-4](?:\.5)?)(?:\s+(.*))?$/i)
+      if (level) {
+        const value = Number(level[2])
+        if (value > 4) return null
+        const side = level[1].toUpperCase() === 'P' ? 1 : -1
+        return {angle: side * value * 22.5, ring: LEVEL_RING, mark: level[2], label: (level[3] ?? '').trim()}
+      }
+      const free = text.match(/^(\d+(?:\.\d+)?)\s+(\d+(?:\.\d+)?)(?:\s+(.*))?$/)
+      if (!free) return null
+      const clock = Number(free[1])
+      const ring = Number(free[2])
+      if (clock > 12 || ring > CUE_RINGS) return null
+      return {angle: clock * 30, ring, mark: null, label: (free[3] ?? '').trim()}
     })
     .filter((tip) => tip !== null)
 }
