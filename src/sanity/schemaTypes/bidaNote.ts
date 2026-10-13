@@ -1,6 +1,7 @@
 import {defineArrayMember, defineField, defineType} from 'sanity'
-import {BIDA_CATEGORIES, bidaCategoryTitle, parsePoint, parsePoints, parseYouTube} from '@/lib/bida'
+import {BIDA_CATEGORIES, bidaCategoryTitle, parseCueTips, parsePoint, parsePoints, parseYouTube} from '@/lib/bida'
 import {BidaDiagramInput} from '../components/BidaDiagramInput'
+import {CueBallInput} from '../components/CueBallInput'
 
 const POINT_HELP = 'Dạng x,y tính bằng kim cương — x từ 0 đến 8 (băng dài), y từ 0 đến 4 (băng ngắn). Số lẻ dùng dấu chấm, vd. 2.5,1'
 
@@ -13,8 +14,8 @@ const ballField = (name: string, title: string) =>
     validation: (Rule) => Rule.custom((value) => (!value || parsePoint(value) ? true : POINT_HELP)),
   })
 
-// Bài viết của trang. Nội dung có 3 khối riêng ngoài chữ/ảnh/bảng: video
-// YouTube, sơ đồ bàn, công thức.
+// Bài viết của trang. Nội dung có 4 khối riêng ngoài chữ/ảnh/bảng: video
+// YouTube, sơ đồ bàn, điểm chạm cơ, công thức.
 export default defineType({
   name: 'bidaNote',
   title: 'Bài viết',
@@ -227,6 +228,33 @@ export default defineType({
             select: {caption: 'caption'},
             prepare({caption}) {
               return {title: caption || 'Sơ đồ bàn', subtitle: caption ? 'Sơ đồ bàn' : undefined}
+            },
+          },
+        }),
+        defineArrayMember({
+          type: 'object',
+          name: 'cueBall',
+          title: 'Điểm chạm cơ (phê)',
+          components: {input: CueBallInput},
+          fields: [
+            defineField({
+              name: 'tips',
+              title: 'Các điểm chạm',
+              type: 'text',
+              rows: 5,
+              description:
+                'Mỗi dòng 1 điểm: "giờ độ-lệch nhãn". Giờ theo mặt đồng hồ nhìn từ sau cơ (3 = bên phải, 2.5 = 2 giờ rưỡi); độ lệch tính bằng số đầu cơ từ tâm (0 = đúng tâm, tối đa 1.4). Vd. "3 1 Phê phải" hoặc "0 0 Đúng tâm".',
+              validation: (Rule) =>
+                Rule.required().custom((value) =>
+                  !value || parseCueTips(value).length > 0 ? true : 'Mỗi dòng dạng "giờ độ-lệch nhãn", vd. "3 1 Phê phải".',
+                ),
+            }),
+            defineField({name: 'caption', title: 'Chú thích', type: 'string'}),
+          ],
+          preview: {
+            select: {caption: 'caption', tips: 'tips'},
+            prepare({caption, tips}) {
+              return {title: caption || 'Điểm chạm cơ', subtitle: tips?.split('\n')[0]}
             },
           },
         }),

@@ -134,3 +134,27 @@ export function parseYouTube(url?: string): {id: string; start: number; vertical
   const start = parseSeconds(parsed.searchParams.get('t') ?? parsed.searchParams.get('start'))
   return {id, start, vertical}
 }
+
+// --- Điểm chạm cơ (phê) ----------------------------------------------------
+// Nhìn trái bi cái từ phía sau cơ như mặt đồng hồ. Mỗi dòng 1 điểm chạm:
+// "giờ độ-lệch nhãn", vd. "3 1 Phê phải". Giờ từ 0 đến 12 (2.5 = 2 giờ rưỡi);
+// độ lệch tính bằng số đầu cơ kể từ tâm (0 = đúng tâm, tối đa 1.4 — xa hơn
+// là trượt cơ).
+
+export const MAX_TIP_OFFSET = 1.4
+
+export type CueTip = {clock: number; offset: number; label: string}
+
+export function parseCueTips(input?: string): CueTip[] {
+  return (input ?? '')
+    .split('\n')
+    .map((line) => {
+      const match = line.trim().match(/^(\d+(?:\.\d+)?)\s+(\d+(?:\.\d+)?)(?:\s+(.*))?$/)
+      if (!match) return null
+      const clock = Number(match[1])
+      const offset = Number(match[2])
+      if (clock > 12 || offset > MAX_TIP_OFFSET) return null
+      return {clock, offset, label: (match[3] ?? '').trim()}
+    })
+    .filter((tip) => tip !== null)
+}

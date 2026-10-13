@@ -2,10 +2,11 @@ import Image from 'next/image'
 import type {PortableTextComponents} from '@portabletext/react'
 import {getImageDimensions, urlFor} from '@/sanity/lib/image'
 import {BidaTable} from './BidaTable'
+import {CueBall} from './CueBall'
 import {YouTubeEmbed} from './YouTubeEmbed'
 
-// Cách hiển thị từng khối trong nội dung bài: chữ, ảnh, bảng và 3 khối
-// riêng của bida — video YouTube, sơ đồ bàn, công thức.
+// Cách hiển thị từng khối trong nội dung bài: chữ, ảnh, bảng và 4 khối
+// riêng của bida — video YouTube, sơ đồ bàn, điểm chạm cơ, công thức.
 export const portableTextComponents: PortableTextComponents = {
   types: {
     image: ({value}) => {
@@ -61,6 +62,16 @@ export const portableTextComponents: PortableTextComponents = {
           <figcaption className="mt-3 px-6 text-center text-sm italic text-neutral-500 sm:px-0">
             {value.caption}
           </figcaption>
+        )}
+      </figure>
+    ),
+    cueBall: ({value}) => (
+      <figure className="my-8">
+        <div className="mx-auto max-w-[320px]">
+          <CueBall value={value} />
+        </div>
+        {value?.caption && (
+          <figcaption className="mt-3 text-center text-sm italic text-neutral-500">{value.caption}</figcaption>
         )}
       </figure>
     ),
