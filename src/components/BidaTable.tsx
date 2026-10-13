@@ -210,7 +210,10 @@ export function BidaTable({value, axis}: {value?: BidaDiagramValue; axis?: boole
           const color = label.color && LABEL_COLORS[label.color]
           // Trên băng + có màu: ghi ra ngoài khung bàn, trên nền trang
           if (label.onRail && color) {
-            const at = pushed(label.point, portrait, FRAME + MARGIN / 2)
+            // Số ở góc bàn xếp thẳng cột với các số dọc băng dài, không đẩy chéo ra xa
+            const onLongRail = label.point.y <= 0 || label.point.y >= TABLE_Y
+            const anchor = onLongRail ? {x: Math.min(Math.max(label.point.x, 0.001), TABLE_X - 0.001), y: label.point.y} : label.point
+            const at = pushed(anchor, portrait, FRAME + MARGIN / 2)
             return (
               <text key={index} x={at.x} y={at.y} fill={color} fontSize={32}>
                 {label.text}
