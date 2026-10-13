@@ -1,4 +1,5 @@
 import {
+  LABEL_COLORS,
   parseLabels,
   parsePoint,
   parsePoints,
@@ -10,16 +11,19 @@ import {
 
 // Sơ đồ bàn bida vẽ bằng SVG từ toạ độ kim cương. Không dùng hook nào để
 // chạy được cả ở trang (server component) lẫn khung xem trước trong Studio.
+//
+// Toạ độ nhập luôn là x theo băng dài (0–8), y theo băng ngắn (0–4), gốc ở
+// góc dưới trái. Bàn nằm ngang hay xoay dọc chỉ khác ở 2 hàm đổi toạ độ
+// `toSvg` và `outward` bên dưới; mọi thứ khác vẽ theo toạ độ bàn.
 
 // 1 kim cương = 100 đơn vị SVG.
 const U = 100
-const W = TABLE_X * U
-const H = TABLE_Y * U
 const CUSHION = 10
 const WOOD = 44
 const FRAME = CUSHION + WOOD
 const DIAMOND_OFFSET = CUSHION + WOOD / 2
-const AXIS = 36
+// Lề ngoài khung bàn, cho số toạ độ và các nhãn có màu ghi bên ngoài bàn
+const MARGIN = 62
 const BALL_R = 15
 
 const BALL_FILL = {white: '#fafafa', yellow: '#f5c518', red: '#d92b2b'} as const
@@ -31,53 +35,43 @@ const PATH_STROKE: Record<string, string> = {
 }
 
 type BallName = keyof typeof BALL_FILL
+type Xy = {x: number; y: number}
 
-const toSvg = (point: Pt) => ({x: point.x * U, y: (TABLE_Y - point.y) * U})
+// Bàn dọc: băng dài đứng thẳng, góc 0,0 vẫn ở dưới bên trái.
+const toSvg = (point: Pt, portrait: boolean): Xy =>
+  portrait ? {x: point.y * U, y: (TABLE_X - point.x) * U} : {x: point.x * U, y: (TABLE_Y - point.y) * U}
 
 // Hướng từ điểm trên băng chỉ ra ngoài bàn (theo trục SVG); 0,0 nếu điểm
 // nằm giữa mặt bàn.
-function outward(point: Pt) {
-  return {
-    x: point.x <= 0 ? -1 : point.x >= TABLE_X ? 1 : 0,
-    y: point.y <= 0 ? 1 : point.y >= TABLE_Y ? -1 : 0,
-  }
+function outward(point: Pt, portrait: boolean): Xy {
+  const alongLong = point.x <= 0 ? -1 : point.x >= TABLE_X ? 1 : 0
+  const alongShort = point.y <= 0 ? -1 : point.y >= TABLE_Y ? 1 : 0
+  return portrait ? {x: alongShort, y: -alongLong} : {x: alongLong, y: -alongShort}
 }
 
-function Diamonds() {
-  const dots: {x: number; y: number}[] = []
-  for (let i = 1; i < TABLE_X; i++) {
-    dots.push({x: i * U, y: -DIAMOND_OFFSET}, {x: i * U, y: H + DIAMOND_OFFSET})
-  }
-  for (let i = 1; i < TABLE_Y; i++) {
-    dots.push({x: -DIAMOND_OFFSET, y: i * U}, {x: W + DIAMOND_OFFSET, y: i * U})
-  }
-  return (
-    <g fill="#f3ead8">
-      {dots.map((dot) => (
-        <circle key={`${dot.x}:${dot.y}`} cx={dot.x} cy={dot.y} r={5} />
-      ))}
-    </g>
-  )
+const pushed = (point: Pt, portrait: boolean, distance: number): Xy => {
+  const at = toSvg(point, portrait)
+  const out = outward(point, portrait)
+  return {x: at.x + out.x * distance, y: at.y + out.y * distance}
 }
 
-function Axis() {
-  return (
-    <g fill="currentColor" fontSize={24} textAnchor="middle" dominantBaseline="central">
-      {Array.from({length: TABLE_X + 1}, (_, i) => (
-        <text key={`x${i}`} x={i * U} y={H + FRAME + AXIS / 2}>
-          {i}
-        </text>
-      ))}
-      {Array.from({length: TABLE_Y + 1}, (_, i) => (
-        <text key={`y${i}`} x={-FRAME - AXIS / 2} y={(TABLE_Y - i) * U}>
-          {i}
-        </text>
-      ))}
-    </g>
-  )
-}
+// Các điểm có kim cương: 7 hạt mỗi băng dài, 3 hạt mỗi băng ngắn.
+const DIAMONDS: Pt[] = [
+  ...Array.from({length: TABLE_X - 1}, (_, i) => [
+    {x: i + 1, y: 0},
+    {x: i + 1, y: TABLE_Y},
+  ]).flat(),
+  ...Array.from({length: TABLE_Y - 1}, (_, i) => [
+    {x: 0, y: i + 1},
+    {x: TABLE_X, y: i + 1},
+  ]).flat(),
+]
 
 export function BidaTable({value, axis}: {value?: BidaDiagramValue; axis?: boolean}) {
+  const portrait = value?.portrait ?? false
+  const W = (portrait ? TABLE_Y : TABLE_X) * U
+  const H = (portrait ? TABLE_X : TABLE_Y) * U
+
   const balls = (['white', 'yellow', 'red'] as BallName[])
     .map((name) => ({name, point: parsePoint(value?.[name])}))
     .filter((ball): ball is {name: BallName; point: Pt} => ball.point !== null)
@@ -90,17 +84,21 @@ export function BidaTable({value, axis}: {value?: BidaDiagramValue; axis?: boole
     })
     .filter((path) => path.points.length >= 2)
 
-  const labels = parseLabels(value?.labels)
+  const labels = parseLabels(value?.labels).map((label) => {
+    const out = outward(label.point, portrait)
+    return {...label, onRail: out.x !== 0 || out.y !== 0}
+  })
   const showAxis = axis ?? value?.showAxis ?? false
   const numberHits = value?.numberHits ?? true
-
-  const left = -FRAME - (showAxis ? AXIS : 0)
-  const viewBox = `${left} ${-FRAME} ${W + FRAME - left} ${H + FRAME * 2 + (showAxis ? AXIS : 0)}`
+  // Nhãn có màu nằm trên băng được ghi ra ngoài khung bàn → cần chừa lề.
+  const margin = showAxis || labels.some((label) => label.onRail && label.color) ? MARGIN : 0
+  const edge = FRAME + margin
+  const viewBox = `${-edge} ${-edge} ${W + edge * 2} ${H + edge * 2}`
 
   // Chạm băng thứ mấy — đánh số liên tục qua mọi điểm trên băng của đường đầu tiên.
   const hits = numberHits
     ? (paths[0]?.points ?? []).slice(1).filter((point) => {
-        const out = outward(point)
+        const out = outward(point, portrait)
         return out.x !== 0 || out.y !== 0
       })
     : []
@@ -116,12 +114,40 @@ export function BidaTable({value, axis}: {value?: BidaDiagramValue; axis?: boole
       <rect x={-FRAME} y={-FRAME} width={W + FRAME * 2} height={H + FRAME * 2} rx={18} fill="#4a2f1d" />
       <rect x={-CUSHION} y={-CUSHION} width={W + CUSHION * 2} height={H + CUSHION * 2} fill="#1f5a94" />
       <rect x={0} y={0} width={W} height={H} fill="#2b74b8" />
-      <Diamonds />
-      {showAxis && <Axis />}
+
+      <g fill="#f3ead8">
+        {DIAMONDS.map((point) => {
+          const at = pushed(point, portrait, DIAMOND_OFFSET)
+          return <circle key={`${point.x}:${point.y}`} cx={at.x} cy={at.y} r={5} />
+        })}
+      </g>
+
+      {showAxis && (
+        <g fill="currentColor" fontSize={24} textAnchor="middle" dominantBaseline="central">
+          {Array.from({length: TABLE_X + 1}, (_, i) => {
+            const at = toSvg({x: i, y: 0}, portrait)
+            const out = outward({x: 1, y: 0}, portrait)
+            return (
+              <text key={`x${i}`} x={at.x + out.x * (FRAME + MARGIN / 2)} y={at.y + out.y * (FRAME + MARGIN / 2)}>
+                {i}
+              </text>
+            )
+          })}
+          {Array.from({length: TABLE_Y + 1}, (_, i) => {
+            const at = toSvg({x: 0, y: i}, portrait)
+            const out = outward({x: 0, y: 1}, portrait)
+            return (
+              <text key={`y${i}`} x={at.x + out.x * (FRAME + MARGIN / 2)} y={at.y + out.y * (FRAME + MARGIN / 2)}>
+                {i}
+              </text>
+            )
+          })}
+        </g>
+      )}
 
       {paths.map((path) => {
         const stroke = PATH_STROKE[path.color ?? ''] ?? PATH_STROKE.white
-        const svgPoints = path.points.map(toSvg)
+        const svgPoints = path.points.map((point) => toSvg(point, portrait))
         const end = svgPoints[svgPoints.length - 1]
         const prev = svgPoints[svgPoints.length - 2]
         const length = Math.hypot(end.x - prev.x, end.y - prev.y) || 1
@@ -129,7 +155,7 @@ export function BidaTable({value, axis}: {value?: BidaDiagramValue; axis?: boole
         const uy = (end.y - prev.y) / length
         // Đường kết thúc ngay tại 1 viên bi thì lùi mũi tên ra mép bi cho khỏi bị che.
         const endsOnBall = balls.some((ball) => {
-          const centre = toSvg(ball.point)
+          const centre = toSvg(ball.point, portrait)
           return Math.hypot(centre.x - end.x, centre.y - end.y) < BALL_R
         })
         const pull = endsOnBall ? BALL_R + 2 : 0
@@ -157,7 +183,7 @@ export function BidaTable({value, axis}: {value?: BidaDiagramValue; axis?: boole
       })}
 
       {balls.map((ball) => {
-        const centre = toSvg(ball.point)
+        const centre = toSvg(ball.point, portrait)
         return (
           <circle
             key={ball.name}
@@ -173,32 +199,45 @@ export function BidaTable({value, axis}: {value?: BidaDiagramValue; axis?: boole
 
       <g fontSize={28} fontWeight={700} textAnchor="middle" dominantBaseline="central" paintOrder="stroke">
         {hits.map((point, index) => {
-          const out = outward(point)
-          const at = toSvg(point)
+          const at = pushed(point, portrait, -30)
           return (
-            <text
-              key={index}
-              x={at.x - out.x * 30}
-              y={at.y - out.y * 30}
-              fill="#ffffff"
-              stroke="#12406b"
-              strokeWidth={7}
-            >
+            <text key={index} x={at.x} y={at.y} fill="#ffffff" stroke="#12406b" strokeWidth={7}>
               {index + 1}
             </text>
           )
         })}
         {labels.map((label, index) => {
-          const out = outward(label.point)
-          const onRail = out.x !== 0 || out.y !== 0
-          const at = toSvg(label.point)
+          const color = label.color && LABEL_COLORS[label.color]
+          // Trên băng + có màu: ghi ra ngoài khung bàn, trên nền trang
+          if (label.onRail && color) {
+            const at = pushed(label.point, portrait, FRAME + MARGIN / 2)
+            return (
+              <text key={index} x={at.x} y={at.y} fill={color} fontSize={32}>
+                {label.text}
+              </text>
+            )
+          }
+          // Trên mặt nỉ + có màu: ô màu chữ trắng
+          if (color) {
+            const at = toSvg(label.point, portrait)
+            const width = label.text.length * 18 + 22
+            return (
+              <g key={index}>
+                <rect x={at.x - width / 2} y={at.y - 21} width={width} height={42} rx={9} fill={color} />
+                <text x={at.x} y={at.y + 1} fill="#ffffff">
+                  {label.text}
+                </text>
+              </g>
+            )
+          }
+          const at = pushed(label.point, portrait, label.onRail ? DIAMOND_OFFSET : 0)
           return (
             <text
               key={index}
-              x={at.x + out.x * DIAMOND_OFFSET}
-              y={at.y + out.y * DIAMOND_OFFSET}
-              fill={onRail ? '#fff3d6' : '#ffffff'}
-              stroke={onRail ? '#4a2f1d' : '#12406b'}
+              x={at.x}
+              y={at.y}
+              fill={label.onRail ? '#fff3d6' : '#ffffff'}
+              stroke={label.onRail ? '#4a2f1d' : '#12406b'}
               strokeWidth={9}
             >
               {label.text}

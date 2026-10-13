@@ -1,6 +1,7 @@
 import Image from 'next/image'
 import type {PortableTextComponents} from '@portabletext/react'
 import {getImageDimensions, urlFor} from '@/sanity/lib/image'
+import {LABEL_COLORS, parseLegend} from '@/lib/bida'
 import {BidaTable} from './BidaTable'
 import {CueBall} from './CueBall'
 import {YouTubeEmbed} from './YouTubeEmbed'
@@ -54,17 +55,34 @@ export const portableTextComponents: PortableTextComponents = {
     },
     youtube: ({value}) => <YouTubeEmbed url={value?.url} start={value?.start} caption={value?.caption} />,
     // Tràn hết bề ngang màn hình điện thoại (-mx-6 bù padding của trang) —
-    // bàn tỉ lệ 2:1 nên mỗi pixel bề ngang đều quý.
-    bidaDiagram: ({value}) => (
-      <figure className="-mx-6 my-8 sm:mx-0">
-        <BidaTable value={value} />
-        {value?.caption && (
-          <figcaption className="mt-3 px-6 text-center text-sm italic text-neutral-500 sm:px-0">
-            {value.caption}
-          </figcaption>
-        )}
-      </figure>
-    ),
+    // mỗi pixel bề ngang đều quý. Bàn xoay dọc thì giới hạn bề ngang trên
+    // màn hình lớn, không thì hình cao hơn cả màn hình.
+    bidaDiagram: ({value}) => {
+      const legend = parseLegend(value?.legend)
+      return (
+        <figure className={`-mx-6 my-8 ${value?.portrait ? 'sm:mx-auto sm:max-w-[440px]' : 'sm:mx-0'}`}>
+          <BidaTable value={value} />
+          {legend.length > 0 && (
+            <ul className="mt-4 space-y-1.5 px-6 text-[15px] leading-snug text-gray-800 sm:px-0">
+              {legend.map((item) => (
+                <li key={item.text} className="flex items-start gap-2.5">
+                  <span
+                    className="mt-1 h-3.5 w-3.5 shrink-0 rounded-sm"
+                    style={{backgroundColor: LABEL_COLORS[item.color]}}
+                  />
+                  <span>{item.text}</span>
+                </li>
+              ))}
+            </ul>
+          )}
+          {value?.caption && (
+            <figcaption className="mt-3 px-6 text-center text-sm italic text-neutral-500 sm:px-0">
+              {value.caption}
+            </figcaption>
+          )}
+        </figure>
+      )
+    },
     cueBall: ({value}) => (
       <figure className="my-8">
         <div className="mx-auto max-w-[320px]">

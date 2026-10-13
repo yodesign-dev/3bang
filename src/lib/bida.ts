@@ -53,6 +53,8 @@ export type BidaDiagramValue = {
   red?: string
   paths?: BidaDiagramPath[]
   labels?: string
+  legend?: string
+  portrait?: boolean
   showAxis?: boolean
   numberHits?: boolean
   caption?: string
@@ -80,17 +82,41 @@ export function parsePoints(input?: string): Pt[] {
     .filter(inTable)
 }
 
-// Mỗi dòng 1 nhãn: "0,3 30" → chữ "30" đặt tại điểm 0,3.
-export function parseLabels(input?: string): {point: Pt; text: string}[] {
+// Màu của nhãn số, để tách các bộ số trên cùng 1 bàn (vd. đen = số xuất
+// phát, xanh = số ngắm, đỏ = điểm về). Gõ có dấu hay không dấu đều được.
+export const LABEL_COLORS = {den: '#171717', xanh: '#15803d', do: '#e11d2a'} as const
+export type LabelColor = keyof typeof LABEL_COLORS
+
+function parseColor(input?: string): LabelColor | undefined {
+  const name = foldText(input ?? '')
+  return name in LABEL_COLORS ? (name as LabelColor) : undefined
+}
+
+// Mỗi dòng 1 nhãn: "0,3 30" → chữ "30" đặt tại điểm 0,3. Thêm "@xanh",
+// "@đỏ" hoặc "@đen" ở cuối để tô màu: nhãn trên băng có màu được ghi ra
+// ngoài khung bàn, nhãn trên mặt nỉ có màu thành ô màu chữ trắng.
+export function parseLabels(input?: string): {point: Pt; text: string; color?: LabelColor}[] {
   return (input ?? '')
     .split('\n')
     .map((line) => {
-      const match = line.trim().match(new RegExp(`^${POINT.source}\\s+(.+)$`))
+      const match = line.trim().match(new RegExp(`^${POINT.source}\\s+(.+?)(?:\\s+@(\\S+))?$`))
       if (!match) return null
       const point = {x: Number(match[1]), y: Number(match[2])}
-      return inTable(point) ? {point, text: match[3].trim()} : null
+      return inTable(point) ? {point, text: match[3].trim(), color: parseColor(match[4])} : null
     })
     .filter((label) => label !== null)
+}
+
+// Chú giải màu dưới sơ đồ, mỗi dòng "@màu chữ": "@đen Số xuất phát".
+export function parseLegend(input?: string): {color: LabelColor; text: string}[] {
+  return (input ?? '')
+    .split('\n')
+    .map((line) => {
+      const match = line.trim().match(/^@(\S+)\s+(.+)$/)
+      const color = parseColor(match?.[1])
+      return match && color ? {color, text: match[2].trim()} : null
+    })
+    .filter((item) => item !== null)
 }
 
 // --- YouTube ---------------------------------------------------------------

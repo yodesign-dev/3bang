@@ -213,8 +213,23 @@ export default defineType({
               name: 'labels',
               title: 'Nhãn số trên bàn',
               type: 'text',
-              rows: 4,
-              description: 'Mỗi dòng 1 nhãn: "x,y chữ". Vd. "0,3 30" ghi số 30 cạnh kim cương thứ 3 băng ngắn bên trái — dùng để đánh số theo từng hệ thống.',
+              rows: 6,
+              description:
+                'Mỗi dòng 1 nhãn: "x,y chữ". Vd. "0,3 30" ghi số 30 cạnh kim cương thứ 3 băng ngắn bên trái. Thêm "@đen", "@xanh" hoặc "@đỏ" ở cuối để tô màu, tách các bộ số với nhau: nhãn trên băng có màu được ghi ra ngoài khung bàn, nhãn trên mặt nỉ có màu thành ô màu.',
+            }),
+            defineField({
+              name: 'legend',
+              title: 'Chú giải màu',
+              type: 'text',
+              rows: 3,
+              description: 'Mỗi dòng "@màu chữ", hiện dưới sơ đồ. Vd. "@đen Số xuất phát", "@xanh Số ngắm", "@đỏ Điểm về".',
+            }),
+            defineField({
+              name: 'portrait',
+              title: 'Xoay bàn dọc',
+              type: 'boolean',
+              description: 'Bàn đứng dọc: hình to gấp đôi trên điện thoại. Toạ độ nhập vẫn như cũ (x theo băng dài), góc 0,0 nằm ở dưới bên trái.',
+              initialValue: false,
             }),
             defineField({
               name: 'showAxis',
