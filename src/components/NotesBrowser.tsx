@@ -1,6 +1,7 @@
 'use client'
 
 import Link from 'next/link'
+import {usePathname} from 'next/navigation'
 import {useState} from 'react'
 import {BIDA_CATEGORIES, bidaCategoryTitle, foldText} from '@/lib/bida'
 
@@ -128,17 +129,22 @@ function Highlight({text, matcher}: {text: string; matcher: Matcher}) {
   return <>{parts}</>
 }
 
-export function NotesBrowser({notes, initialCategory}: {notes: BrowserNote[]; initialCategory?: string}) {
+export function NotesBrowser({notes}: {notes: BrowserNote[]}) {
+  const pathname = usePathname()
   const [query, setQuery] = useState('')
   // Chỉ hiện chip của nhóm đã có bài — nhóm trống bấm vào chỉ thấy trang rỗng.
   const categories = BIDA_CATEGORIES.filter((category) => notes.some((note) => note.category === category.value))
-  const [category, setCategory] = useState(
-    categories.find((item) => item.value === initialCategory)?.value as string | undefined,
-  )
+  const [category, setCategory] = useState<string>()
+  const pickCategory = setCategory
 
-  const pickCategory = (value?: string) => {
-    setCategory(value)
-    window.history.replaceState(null, '', value ? `/?nhom=${value}` : '/')
+  // Bấm kết quả thuộc bài đang mở: chỉ đổi tab, không tải lại gì. Dùng đúng
+  // cách ArticleTabs đổi tab (ghi # vào địa chỉ rồi báo hashchange).
+  const openSection = (event: React.MouseEvent, slug: string, sectionId: string) => {
+    if (pathname !== `/${slug}` || !sectionId) return
+    event.preventDefault()
+    window.history.replaceState(null, '', `#${sectionId}`)
+    window.dispatchEvent(new HashChangeEvent('hashchange'))
+    window.scrollTo({top: 0})
   }
 
   const strict = buildMatcher(query, false)
@@ -209,6 +215,7 @@ export function NotesBrowser({notes, initialCategory}: {notes: BrowserNote[]; in
                       <li key={snippet.sectionId || 'intro'}>
                         <Link
                           href={`/${note.slug}${snippet.sectionId ? `#${snippet.sectionId}` : ''}`}
+                          onClick={(event) => openSection(event, note.slug, snippet.sectionId)}
                           className="block py-3 hover:bg-neutral-50"
                         >
                           {snippet.sectionTitle && (
@@ -238,7 +245,7 @@ export function NotesBrowser({notes, initialCategory}: {notes: BrowserNote[]; in
               aria-label="Nhóm bài"
               className="-mx-6 mb-8 flex gap-2 overflow-x-auto px-6 pb-1 sm:mx-0 sm:flex-wrap sm:px-0"
             >
-              <button type="button" onClick={() => pickCategory()} className={chipClass(!category)}>
+              <button type="button" onClick={() => pickCategory(undefined)} className={chipClass(!category)}>
                 Tất cả
               </button>
               {categories.map((item) => (
@@ -254,7 +261,7 @@ export function NotesBrowser({notes, initialCategory}: {notes: BrowserNote[]; in
             </nav>
           )}
 
-          <ul className="grid grid-cols-1 gap-4 sm:grid-cols-2 lg:grid-cols-3">
+          <ul className="grid grid-cols-1 gap-4 sm:grid-cols-2 lg:grid-cols-1 lg:gap-3">
             {shown.map((note) => {
               const extras = [
                 note.diagrams > 0 && `${note.diagrams} sơ đồ`,
@@ -265,12 +272,13 @@ export function NotesBrowser({notes, initialCategory}: {notes: BrowserNote[]; in
                 <li key={note._id}>
                   <Link
                     href={`/${note.slug}`}
-                    className="group flex h-full flex-col rounded-xl border border-neutral-200 p-5 transition hover:border-neutral-400"
+                    aria-current={pathname === `/${note.slug}` ? 'page' : undefined}
+                    className="group flex h-full flex-col rounded-xl border border-neutral-200 p-5 transition hover:border-neutral-400 aria-[current=page]:border-brand aria-[current=page]:bg-brand/5 lg:p-4"
                   >
                     <p className="text-xs font-semibold uppercase tracking-widest text-brand">
                       {bidaCategoryTitle(note.category)}
                     </p>
-                    <h2 className="mt-2 text-xl font-semibold leading-snug text-neutral-900 transition-colors group-hover:text-neutral-600">
+                    <h2 className="mt-2 text-xl font-semibold leading-snug text-neutral-900 transition-colors group-hover:text-neutral-600 lg:text-lg">
                       {note.title}
                     </h2>
                     {note.excerpt && (

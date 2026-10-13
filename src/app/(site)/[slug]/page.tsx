@@ -97,8 +97,9 @@ export default async function BidaNotePage({params}: {params: Promise<{slug: str
   const useTabs = tabbed.length >= 3
 
   return (
-    <div className="min-h-screen bg-white text-neutral-900 antialiased">
-      <header className="border-b border-neutral-200">
+    <div className="bg-white text-neutral-900 antialiased">
+      {/* Màn hình lớn đã có cột danh sách bên trái nên không cần đường quay lại */}
+      <header className="border-b border-neutral-200 lg:hidden">
         <div className="mx-auto max-w-3xl px-6 py-6 sm:px-8">
           <Link href="/" className="text-sm text-neutral-500 transition-colors hover:text-neutral-900">
             ← {BIDA_TITLE}
@@ -108,12 +109,9 @@ export default async function BidaNotePage({params}: {params: Promise<{slug: str
 
       <main className="mx-auto max-w-3xl px-6 py-10 sm:px-8 sm:py-16">
         <article>
-          <Link
-            href={`/?nhom=${note.category}`}
-            className="text-xs font-semibold uppercase tracking-widest text-brand"
-          >
+          <p className="text-xs font-semibold uppercase tracking-widest text-brand">
             {bidaCategoryTitle(note.category)}
-          </Link>
+          </p>
           <h1 className="mt-3 text-3xl font-semibold leading-tight tracking-tight text-neutral-900 sm:text-4xl">
             {note.title}
           </h1>

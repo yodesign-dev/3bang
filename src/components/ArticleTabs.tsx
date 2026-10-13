@@ -30,6 +30,14 @@ export function ArticleTabs({
   const wrapperRef = useRef<HTMLDivElement>(null)
   const barRef = useRef<HTMLDivElement>(null)
 
+  // Mở bài từ link có # bằng điều hướng trong trang (vd. từ kết quả tìm kiếm):
+  // lúc vẽ lần đầu địa chỉ có thể chưa kịp đổi, nên đọc lại # sau khi vẽ xong.
+  useEffect(() => {
+    const recheck = () => window.dispatchEvent(new HashChangeEvent(HASH_EVENT))
+    const timers = [window.setTimeout(recheck, 0), window.setTimeout(recheck, 200)]
+    return () => timers.forEach((timer) => window.clearTimeout(timer))
+  }, [])
+
   // Giữ tab đang mở nằm giữa thanh tab khi thanh phải vuốt ngang.
   useEffect(() => {
     const bar = barRef.current
