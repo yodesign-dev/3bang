@@ -53,6 +53,7 @@ export type BidaDiagramValue = {
   red?: string
   paths?: BidaDiagramPath[]
   labels?: string
+  zones?: string
   legend?: string
   portrait?: boolean
   showAxis?: boolean
@@ -112,6 +113,21 @@ export function parseLabels(input?: string): {point: Pt; text: string; color?: L
       return inTable(point) ? {point, text: match[3].trim(), color: parseColor(match[4])} : null
     })
     .filter((label) => label !== null)
+}
+
+// Vùng tô màu trên mặt bàn, mỗi dòng 1 vùng: "@màu x,y x,y x,y …" — các
+// đỉnh của vùng theo thứ tự. Dùng để chia bàn thành khu (vd. khu nào đánh
+// phê nào).
+export function parseZones(input?: string): {color: LabelColor; points: Pt[]}[] {
+  return (input ?? '')
+    .split('\n')
+    .map((line) => {
+      const match = line.trim().match(/^@(\S+)\s+(.+)$/)
+      const color = parseColor(match?.[1])
+      const points = parsePoints(match?.[2])
+      return color && points.length >= 3 ? {color, points} : null
+    })
+    .filter((zone) => zone !== null)
 }
 
 // Chú giải màu dưới sơ đồ, mỗi dòng "@màu chữ": "@đen Số xuất phát".

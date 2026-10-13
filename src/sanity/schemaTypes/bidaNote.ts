@@ -218,6 +218,13 @@ export default defineType({
                 'Mỗi dòng 1 nhãn: "x,y chữ". Vd. "0,3 30" ghi số 30 cạnh kim cương thứ 3 băng ngắn bên trái. Thêm "@lam", "@xanh", "@đỏ", "@vàng" hoặc "@đen" ở cuối để tô màu, tách các bộ số với nhau: nhãn trên băng có màu được ghi ra ngoài khung bàn, nhãn trên mặt nỉ có màu thành ô màu.',
             }),
             defineField({
+              name: 'zones',
+              title: 'Vùng tô màu',
+              type: 'text',
+              rows: 3,
+              description: 'Mỗi dòng 1 vùng: "@màu x,y x,y x,y …" là các đỉnh của vùng theo thứ tự. Vd. "@vàng 0,3 0,0 7,0". Dùng để chia bàn thành khu.',
+            }),
+            defineField({
               name: 'legend',
               title: 'Chú giải màu',
               type: 'text',

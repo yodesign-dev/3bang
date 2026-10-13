@@ -1,6 +1,7 @@
 import {
   LABEL_COLORS,
   parseLabels,
+  parseZones,
   parsePoint,
   parsePoints,
   TABLE_X,
@@ -27,6 +28,14 @@ const MARGIN = 62
 const BALL_R = 15
 
 const BALL_FILL = {white: '#fafafa', yellow: '#f5c518', red: '#d92b2b'} as const
+// Màu tô vùng trên mặt nỉ: nhạt hơn màu nhãn để số và đường bi vẫn nổi
+const ZONE_FILL: Record<string, string> = {
+  vang: '#c9cf5f',
+  lam: '#8ec0ee',
+  xanh: '#58a97a',
+  do: '#e58a8a',
+  den: '#64748b',
+}
 const PATH_STROKE: Record<string, string> = {
   white: '#ffffff',
   yellow: '#ffd84d',
@@ -114,6 +123,19 @@ export function BidaTable({value, axis}: {value?: BidaDiagramValue; axis?: boole
       <rect x={-FRAME} y={-FRAME} width={W + FRAME * 2} height={H + FRAME * 2} rx={18} fill="#4a2f1d" />
       <rect x={-CUSHION} y={-CUSHION} width={W + CUSHION * 2} height={H + CUSHION * 2} fill="#1f5a94" />
       <rect x={0} y={0} width={W} height={H} fill="#2b74b8" />
+
+      {parseZones(value?.zones).map((zone, index) => (
+        <polygon
+          key={index}
+          points={zone.points
+            .map((point) => toSvg(point, portrait))
+            .map((at) => `${at.x},${at.y}`)
+            .join(' ')}
+          fill={ZONE_FILL[zone.color]}
+          stroke="#12406b"
+          strokeWidth={2}
+        />
+      ))}
 
       <g fill="#f3ead8">
         {DIAMONDS.map((point) => {
