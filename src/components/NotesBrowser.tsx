@@ -281,8 +281,8 @@ export function NotesBrowser({notes}: {notes: BrowserNote[]}) {
                     <h2 className="mt-2 text-xl font-semibold leading-snug text-neutral-900 transition-colors group-hover:text-neutral-600 lg:mt-1.5 lg:text-base">
                       {note.title}
                     </h2>
+                    {/* Cột trái trên màn hình lớn: thẻ chỉ còn nhóm, tiêu đề, công thức để danh sách gọn */}
                     {note.excerpt && (
-                      {/* Cột trái trên màn hình lớn: thẻ chỉ còn nhóm, tiêu đề, công thức để danh sách gọn */}
                       <p className="mt-2 line-clamp-3 text-[15px] leading-relaxed text-neutral-600 lg:hidden">
                         {note.excerpt}
                       </p>
