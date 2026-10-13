@@ -261,7 +261,7 @@ export function NotesBrowser({notes}: {notes: BrowserNote[]}) {
             </nav>
           )}
 
-          <ul className="grid grid-cols-1 gap-4 sm:grid-cols-2 lg:grid-cols-1 lg:gap-3">
+          <ul className="grid grid-cols-1 gap-4 sm:grid-cols-2 lg:grid-cols-1 lg:gap-2">
             {shown.map((note) => {
               const extras = [
                 note.diagrams > 0 && `${note.diagrams} sơ đồ`,
@@ -273,26 +273,27 @@ export function NotesBrowser({notes}: {notes: BrowserNote[]}) {
                   <Link
                     href={`/${note.slug}`}
                     aria-current={pathname === `/${note.slug}` ? 'page' : undefined}
-                    className="group flex h-full flex-col rounded-xl border border-neutral-200 p-5 transition hover:border-neutral-400 aria-[current=page]:border-brand aria-[current=page]:bg-brand/5 lg:p-4"
+                    className="group flex h-full flex-col rounded-xl border border-neutral-200 p-5 transition hover:border-neutral-400 aria-[current=page]:border-brand aria-[current=page]:bg-brand/5 lg:px-4 lg:py-3"
                   >
                     <p className="text-xs font-semibold uppercase tracking-widest text-brand">
                       {bidaCategoryTitle(note.category)}
                     </p>
-                    <h2 className="mt-2 text-xl font-semibold leading-snug text-neutral-900 transition-colors group-hover:text-neutral-600 lg:text-lg">
+                    <h2 className="mt-2 text-xl font-semibold leading-snug text-neutral-900 transition-colors group-hover:text-neutral-600 lg:mt-1.5 lg:text-base">
                       {note.title}
                     </h2>
                     {note.excerpt && (
-                      <p className="mt-2 line-clamp-3 text-[15px] leading-relaxed text-neutral-600">
+                      {/* Cột trái trên màn hình lớn: thẻ chỉ còn nhóm, tiêu đề, công thức để danh sách gọn */}
+                      <p className="mt-2 line-clamp-3 text-[15px] leading-relaxed text-neutral-600 lg:hidden">
                         {note.excerpt}
                       </p>
                     )}
                     {note.formula && (
-                      <p className="mt-4 rounded-md bg-neutral-100 px-3 py-2 font-mono text-sm font-medium text-neutral-800 [overflow-wrap:anywhere]">
+                      <p className="mt-4 rounded-md bg-neutral-100 px-3 py-2 font-mono text-sm font-medium text-neutral-800 [overflow-wrap:anywhere] lg:mt-2.5 lg:px-2.5 lg:py-1.5 lg:text-[13px]">
                         {note.formula}
                       </p>
                     )}
                     {extras.length > 0 && (
-                      <p className="mt-auto pt-4 text-sm text-neutral-400">{extras.join(' · ')}</p>
+                      <p className="mt-auto pt-4 text-sm text-neutral-400 lg:hidden">{extras.join(' · ')}</p>
                     )}
                   </Link>
                 </li>
