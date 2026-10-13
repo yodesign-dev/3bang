@@ -82,9 +82,16 @@ export function parsePoints(input?: string): Pt[] {
     .filter(inTable)
 }
 
-// Màu của nhãn số, để tách các bộ số trên cùng 1 bàn (vd. đen = số xuất
-// phát, xanh = số ngắm, đỏ = điểm về). Gõ có dấu hay không dấu đều được.
-export const LABEL_COLORS = {den: '#171717', xanh: '#15803d', do: '#e11d2a'} as const
+// Màu của nhãn số, để tách các bộ số trên cùng 1 bàn (vd. lam = số băng 1,
+// đỏ = số băng 3, vàng = số xuất phát, xanh = số băng 4). Gõ có dấu hay
+// không dấu đều được. "vàng" là ô vàng chữ đen.
+export const LABEL_COLORS = {
+  den: '#171717',
+  lam: '#1d4ed8',
+  xanh: '#15803d',
+  do: '#e11d2a',
+  vang: '#facc15',
+} as const
 export type LabelColor = keyof typeof LABEL_COLORS
 
 function parseColor(input?: string): LabelColor | undefined {
@@ -92,8 +99,8 @@ function parseColor(input?: string): LabelColor | undefined {
   return name in LABEL_COLORS ? (name as LabelColor) : undefined
 }
 
-// Mỗi dòng 1 nhãn: "0,3 30" → chữ "30" đặt tại điểm 0,3. Thêm "@xanh",
-// "@đỏ" hoặc "@đen" ở cuối để tô màu: nhãn trên băng có màu được ghi ra
+// Mỗi dòng 1 nhãn: "0,3 30" → chữ "30" đặt tại điểm 0,3. Thêm "@lam",
+// "@xanh", "@đỏ", "@vàng" hoặc "@đen" ở cuối để tô màu: nhãn trên băng có màu được ghi ra
 // ngoài khung bàn, nhãn trên mặt nỉ có màu thành ô màu chữ trắng.
 export function parseLabels(input?: string): {point: Pt; text: string; color?: LabelColor}[] {
   return (input ?? '')
@@ -164,14 +171,16 @@ export function parseYouTube(url?: string): {id: string; start: number; vertical
 // --- Điểm chạm cơ (ép phê) -------------------------------------------------
 // Trái bi cái nhìn từ phía sau cơ, chia lưới như bia bắn: 5 vòng tròn (vòng 5
 // là mép bi) và các tia cách nhau 22.5°. Mỗi dòng 1 điểm chạm, 2 cách ghi:
-//   "P3 nhãn" / "T2 nhãn" — ép phê cao cơ bên Phải / bên Trái, mức 0–4 theo
-//       cách gọi quen thuộc: mức 0 ở chính giữa phía trên, mỗi mức lệch thêm
-//       22.5°, mức 4 nằm ngang tâm. Số ghi trong chấm là số mức.
+//   "P3 nhãn" / "T2 nhãn" — hướng phê bên Phải / bên Trái theo thang 0–4
+//       ghi quanh mặt bi (0 = 12 giờ, mỗi bậc lệch 22.5°, 4 = 3 giờ; bên trái
+//       là −1…−4, −4 = 9 giờ), chạm ở 3 đầu cơ = vòng thứ 3. Số ghi trong
+//       chấm là số bậc.
 //   "giờ vòng nhãn" — điểm bất kỳ: giờ theo mặt đồng hồ (0–12, 1.5 = 1 giờ
 //       rưỡi), vòng 0–5 (0 = đúng tâm). Chấm được đánh số theo thứ tự.
 
 export const CUE_RINGS = 5
-const LEVEL_RING = 4
+// 3 đầu cơ: mỗi đầu cơ 1 vòng (6,1 mm trên bi 61 mm)
+const LEVEL_RING = 3
 
 export type CueTip = {angle: number; ring: number; mark: string | null; label: string}
 
@@ -185,7 +194,8 @@ export function parseCueTips(input?: string): CueTip[] {
         const value = Number(level[2])
         if (value > 4) return null
         const side = level[1].toUpperCase() === 'P' ? 1 : -1
-        return {angle: side * value * 22.5, ring: LEVEL_RING, mark: level[2], label: (level[3] ?? '').trim()}
+        const mark = side < 0 && value > 0 ? `−${level[2]}` : level[2]
+        return {angle: side * value * 22.5, ring: LEVEL_RING, mark, label: (level[3] ?? '').trim()}
       }
       const free = text.match(/^(\d+(?:\.\d+)?)\s+(\d+(?:\.\d+)?)(?:\s+(.*))?$/)
       if (!free) return null

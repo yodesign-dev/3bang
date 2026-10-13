@@ -215,7 +215,7 @@ export default defineType({
               type: 'text',
               rows: 6,
               description:
-                'Mỗi dòng 1 nhãn: "x,y chữ". Vd. "0,3 30" ghi số 30 cạnh kim cương thứ 3 băng ngắn bên trái. Thêm "@đen", "@xanh" hoặc "@đỏ" ở cuối để tô màu, tách các bộ số với nhau: nhãn trên băng có màu được ghi ra ngoài khung bàn, nhãn trên mặt nỉ có màu thành ô màu.',
+                'Mỗi dòng 1 nhãn: "x,y chữ". Vd. "0,3 30" ghi số 30 cạnh kim cương thứ 3 băng ngắn bên trái. Thêm "@lam", "@xanh", "@đỏ", "@vàng" hoặc "@đen" ở cuối để tô màu, tách các bộ số với nhau: nhãn trên băng có màu được ghi ra ngoài khung bàn, nhãn trên mặt nỉ có màu thành ô màu.',
             }),
             defineField({
               name: 'legend',
@@ -258,7 +258,7 @@ export default defineType({
               type: 'text',
               rows: 5,
               description:
-                'Mỗi dòng 1 điểm. Ép phê cao cơ theo mức 0–4: "P3 nhãn" (bên phải mức 3) hoặc "T2 nhãn" (bên trái mức 2). Điểm bất kỳ: "giờ vòng nhãn", giờ theo mặt đồng hồ nhìn từ sau cơ, vòng 0–5 (0 = đúng tâm, 5 = mép bi), vd. "6 2 Thấp cơ".',
+                'Mỗi dòng 1 điểm. Theo thang quanh mặt bi, 3 đầu cơ: "P3 nhãn" (bên phải bậc 3 = 2 giờ 15) hoặc "T4 nhãn" (bên trái bậc 4 = 9 giờ). Điểm bất kỳ: "giờ vòng nhãn", giờ theo mặt đồng hồ nhìn từ sau cơ, vòng 0–5 (0 = đúng tâm, 5 = mép bi), vd. "6 2 Thấp cơ".',
               validation: (Rule) =>
                 Rule.required().custom((value) =>
                   !value || parseCueTips(value).length > 0 ? true : 'Mỗi dòng dạng "P3 nhãn", "T2 nhãn" hoặc "giờ vòng nhãn".',

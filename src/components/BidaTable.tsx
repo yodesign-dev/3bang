@@ -214,8 +214,19 @@ export function BidaTable({value, axis}: {value?: BidaDiagramValue; axis?: boole
             const onLongRail = label.point.y <= 0 || label.point.y >= TABLE_Y
             const anchor = onLongRail ? {x: Math.min(Math.max(label.point.x, 0.001), TABLE_X - 0.001), y: label.point.y} : label.point
             const at = pushed(anchor, portrait, FRAME + MARGIN / 2)
+            if (label.color === 'vang') {
+              const width = label.text.length * 13 + 12
+              return (
+                <g key={index} fontSize={22}>
+                  <rect x={at.x - width / 2} y={at.y - 17} width={width} height={34} rx={17} fill={color} />
+                  <text x={at.x} y={at.y + 1} fill="#171717">
+                    {label.text}
+                  </text>
+                </g>
+              )
+            }
             return (
-              <text key={index} x={at.x} y={at.y} fill={color} fontSize={32}>
+              <text key={index} x={at.x} y={at.y} fill={color} fontSize={27}>
                 {label.text}
               </text>
             )
@@ -223,11 +234,11 @@ export function BidaTable({value, axis}: {value?: BidaDiagramValue; axis?: boole
           // Trên mặt nỉ + có màu: ô màu chữ trắng
           if (color) {
             const at = toSvg(label.point, portrait)
-            const width = label.text.length * 18 + 22
+            const width = label.text.length * 15 + 16
             return (
-              <g key={index}>
-                <rect x={at.x - width / 2} y={at.y - 21} width={width} height={42} rx={9} fill={color} />
-                <text x={at.x} y={at.y + 1} fill="#ffffff">
+              <g key={index} fontSize={24}>
+                <rect x={at.x - width / 2} y={at.y - 18} width={width} height={36} rx={8} fill={color} />
+                <text x={at.x} y={at.y + 1} fill={label.color === 'vang' ? '#171717' : '#ffffff'}>
                   {label.text}
                 </text>
               </g>

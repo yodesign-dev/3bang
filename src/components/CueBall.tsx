@@ -6,7 +6,9 @@ import {CUE_RINGS, parseCueTips} from '@/lib/bida'
 
 const SIZE = 360
 const C = SIZE / 2
-const R = 168
+const R = 140
+// Thang −4…4 ghi quanh nửa trên mặt bi: 0 = 12 giờ, ±4 = 3 giờ / 9 giờ
+const SCALE = [-4, -3, -2, -1, 0, 1, 2, 3, 4]
 const SPOKES = 16
 const RED = '#e11d2a'
 
@@ -40,6 +42,17 @@ export function CueBall({value}: {value?: {tips?: string; caption?: string}}) {
           })}
         </g>
 
+        <g fill="#525252" fontSize={17} textAnchor="middle" dominantBaseline="central">
+          {SCALE.map((step) => {
+            const at = polar(step * 22.5, R + 18)
+            return (
+              <text key={step} x={at.x} y={at.y}>
+                {step < 0 ? `−${-step}` : step}
+              </text>
+            )
+          })}
+        </g>
+
         {tips.map((tip, index) => {
           const at = polar(tip.angle, (R * tip.ring) / CUE_RINGS)
           return (
@@ -49,7 +62,7 @@ export function CueBall({value}: {value?: {tips?: string; caption?: string}}) {
                 x={at.x}
                 y={at.y + 1}
                 fill="#ffffff"
-                fontSize={22}
+                fontSize={tip.mark.length > 1 ? 17 : 21}
                 fontWeight={600}
                 textAnchor="middle"
                 dominantBaseline="central"
@@ -68,7 +81,7 @@ export function CueBall({value}: {value?: {tips?: string; caption?: string}}) {
           {legend.map((tip, index) => (
             <li key={index} className="flex gap-3">
               <span
-                className="flex h-6 w-6 shrink-0 items-center justify-center rounded-full text-sm font-bold text-white"
+                className="flex h-6 min-w-6 shrink-0 items-center justify-center rounded-full px-1 text-sm font-bold text-white"
                 style={{backgroundColor: RED}}
               >
                 {tip.mark}
