@@ -69,21 +69,21 @@ const pushed = (point: Pt, portrait: boolean, distance: number): Xy => {
   return {x: at.x + out.x * distance, y: at.y + out.y * distance}
 }
 
-// Các điểm có kim cương: 7 hạt mỗi băng dài, 3 hạt mỗi băng ngắn, thêm 1 mốc
-// ở mỗi góc (điểm 0 và 8 của bộ số) — đi vòng quanh bàn là 8 + 4 + 8 + 4.
-const DIAMONDS: Pt[] = [
-  ...[0, TABLE_X].flatMap((x) => [0, TABLE_Y].map((y) => ({x, y}))),
-  ...Array.from({length: TABLE_X - 1}, (_, i) => [
-    {x: i + 1, y: 0},
-    {x: i + 1, y: TABLE_Y},
-  ]).flat(),
-  ...Array.from({length: TABLE_Y - 1}, (_, i) => [
-    {x: 0, y: i + 1},
-    {x: TABLE_X, y: i + 1},
-  ]).flat(),
+// Hạt kim cương trên khung, theo bàn thật: mỗi băng dài 9 hạt, mỗi băng ngắn
+// 5 hạt. Hạt đầu và hạt cuối của mỗi băng nằm ngang mép cao su của băng kề
+// bên (điểm 0 và 8, hoặc 0 và 4), nên mỗi góc bàn có 2 hạt — mỗi băng 1 hạt —
+// chứ không có hạt nào nằm chéo trong ô góc. `from` là điểm giữa băng đó, chỉ
+// để lấy hướng đẩy hạt ra khung.
+const DIAMONDS: {point: Pt; from: Pt}[] = [
+  ...Array.from({length: TABLE_X + 1}, (_, x) =>
+    [0, TABLE_Y].map((y) => ({point: {x, y}, from: {x: TABLE_X / 2, y}})),
+  ).flat(),
+  ...Array.from({length: TABLE_Y + 1}, (_, y) =>
+    [0, TABLE_X].map((x) => ({point: {x, y}, from: {x, y: TABLE_Y / 2}})),
+  ).flat(),
 ]
 
-const isDiamond = (point: Pt) => DIAMONDS.some((diamond) => diamond.x === point.x && diamond.y === point.y)
+const isDiamond = (point: Pt) => DIAMONDS.some(({point: at}) => at.x === point.x && at.y === point.y)
 
 export function BidaTable({value, axis}: {value?: BidaDiagramValue; axis?: boolean}) {
   const portrait = value?.portrait ?? false
@@ -147,9 +147,17 @@ export function BidaTable({value, axis}: {value?: BidaDiagramValue; axis?: boole
       ))}
 
       <g fill="#f3ead8">
-        {DIAMONDS.map((point) => {
-          const at = pushed(point, portrait, DIAMOND_OFFSET)
-          return <circle key={`${point.x}:${point.y}`} cx={at.x} cy={at.y} r={5} />
+        {DIAMONDS.map(({point, from}) => {
+          const at = toSvg(point, portrait)
+          const out = outward(from, portrait)
+          return (
+            <circle
+              key={`${point.x}:${point.y}:${from.x}`}
+              cx={at.x + out.x * DIAMOND_OFFSET}
+              cy={at.y + out.y * DIAMOND_OFFSET}
+              r={5}
+            />
+          )
         })}
       </g>
 
