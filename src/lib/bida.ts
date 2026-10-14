@@ -36,6 +36,9 @@ export function bidaCategoryTitle(value?: string) {
 
 export const TABLE_X = 8
 export const TABLE_Y = 4
+// Hạt kim cương nằm trên khung gỗ, lùi ra ngoài mép cao su chừng này. Đường
+// bi được phép chạy tới đó để vẽ đường ngắm xuyên qua băng vào đúng hạt.
+export const FRAME_REACH = 0.32
 
 export type Pt = {x: number; y: number}
 
@@ -62,10 +65,10 @@ export type BidaDiagramValue = {
   caption?: string
 }
 
-const POINT = /(\d+(?:\.\d+)?)\s*,\s*(\d+(?:\.\d+)?)/
+const POINT = /(-?\d+(?:\.\d+)?)\s*,\s*(-?\d+(?:\.\d+)?)/
 
-function inTable(point: Pt) {
-  return point.x >= 0 && point.x <= TABLE_X && point.y >= 0 && point.y <= TABLE_Y
+function inTable(point: Pt, reach = 0) {
+  return point.x >= -reach && point.x <= TABLE_X + reach && point.y >= -reach && point.y <= TABLE_Y + reach
 }
 
 // "2,1.5" → {x: 2, y: 1.5}; sai dạng hoặc nằm ngoài bàn → null.
@@ -77,11 +80,12 @@ export function parsePoint(input?: string): Pt | null {
 }
 
 // "1,1 > 8,2.5 > 5,4" → 3 điểm. Ngăn cách bằng gì cũng được (dấu cách, >, →),
-// chỉ cần mỗi điểm đúng dạng x,y.
+// chỉ cần mỗi điểm đúng dạng x,y. Điểm được phép lùi ra tới hàng kim cương
+// trên khung (vd. 5,-0.32) để vẽ đường ngắm vào hạt.
 export function parsePoints(input?: string): Pt[] {
   return [...(input ?? '').matchAll(new RegExp(POINT.source, 'g'))]
     .map((match) => ({x: Number(match[1]), y: Number(match[2])}))
-    .filter(inTable)
+    .filter((point) => inTable(point, FRAME_REACH))
 }
 
 // Màu của nhãn số, để tách các bộ số trên cùng 1 bàn (vd. lam = số băng 1,
@@ -103,15 +107,19 @@ function parseColor(input?: string): LabelColor | undefined {
 
 // Mỗi dòng 1 nhãn: "0,3 30" → chữ "30" đặt tại điểm 0,3. Thêm "@lam",
 // "@xanh", "@đỏ", "@vàng" hoặc "@đen" ở cuối để tô màu: nhãn trên băng có màu được ghi ra
-// ngoài khung bàn, nhãn trên mặt nỉ có màu thành ô màu chữ trắng.
-export function parseLabels(input?: string): {point: Pt; text: string; color?: LabelColor}[] {
+// ngoài khung bàn, nhãn trên mặt nỉ có màu thành ô màu chữ trắng. Thêm chữ
+// "trong" sau màu ("6,4 20 @đỏ trong") cho số đọc trên mép cao su: ô màu nằm
+// phía trong bàn, kèm mũi tam giác đánh dấu đúng điểm trên mép băng.
+export function parseLabels(input?: string): {point: Pt; text: string; color?: LabelColor; inside: boolean}[] {
   return (input ?? '')
     .split('\n')
     .map((line) => {
-      const match = line.trim().match(new RegExp(`^${POINT.source}\\s+(.+?)(?:\\s+@(\\S+))?$`))
+      const match = line.trim().match(new RegExp(`^${POINT.source}\\s+(.+?)(?:\\s+@(\\S+)(?:\\s+(trong))?)?$`, 'i'))
       if (!match) return null
       const point = {x: Number(match[1]), y: Number(match[2])}
-      return inTable(point) ? {point, text: match[3].trim(), color: parseColor(match[4])} : null
+      return inTable(point)
+        ? {point, text: match[3].trim(), color: parseColor(match[4]), inside: Boolean(match[5])}
+        : null
     })
     .filter((label) => label !== null)
 }

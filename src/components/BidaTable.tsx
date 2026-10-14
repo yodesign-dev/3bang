@@ -24,6 +24,8 @@ const CUSHION = 10
 const WOOD = 44
 const FRAME = CUSHION + WOOD
 const DIAMOND_OFFSET = CUSHION + WOOD / 2
+// Ô số đọc trên mép cao su nằm lùi vào trong bàn chừng này
+const INSIDE_OFFSET = 45
 // Lề ngoài khung bàn, cho số toạ độ và các nhãn có màu ghi bên ngoài bàn
 const MARGIN = 62
 const BALL_R = 15
@@ -67,8 +69,10 @@ const pushed = (point: Pt, portrait: boolean, distance: number): Xy => {
   return {x: at.x + out.x * distance, y: at.y + out.y * distance}
 }
 
-// Các điểm có kim cương: 7 hạt mỗi băng dài, 3 hạt mỗi băng ngắn.
+// Các điểm có kim cương: 7 hạt mỗi băng dài, 3 hạt mỗi băng ngắn, thêm 1 mốc
+// ở mỗi góc (điểm 0 và 8 của bộ số) — đi vòng quanh bàn là 8 + 4 + 8 + 4.
 const DIAMONDS: Pt[] = [
+  ...[0, TABLE_X].flatMap((x) => [0, TABLE_Y].map((y) => ({x, y}))),
   ...Array.from({length: TABLE_X - 1}, (_, i) => [
     {x: i + 1, y: 0},
     {x: i + 1, y: TABLE_Y},
@@ -78,6 +82,8 @@ const DIAMONDS: Pt[] = [
     {x: TABLE_X, y: i + 1},
   ]).flat(),
 ]
+
+const isDiamond = (point: Pt) => DIAMONDS.some((diamond) => diamond.x === point.x && diamond.y === point.y)
 
 export function BidaTable({value, axis}: {value?: BidaDiagramValue; axis?: boolean}) {
   const portrait = value?.portrait ?? false
@@ -103,7 +109,7 @@ export function BidaTable({value, axis}: {value?: BidaDiagramValue; axis?: boole
   const showAxis = axis ?? value?.showAxis ?? false
   const numberHits = value?.numberHits ?? true
   // Nhãn có màu nằm trên băng được ghi ra ngoài khung bàn → cần chừa lề.
-  const margin = showAxis || labels.some((label) => label.onRail && label.color) ? MARGIN : 0
+  const margin = showAxis || labels.some((label) => label.onRail && label.color && !label.inside) ? MARGIN : 0
   const edge = FRAME + margin
   const viewBox = `${-edge} ${-edge} ${W + edge * 2} ${H + edge * 2}`
 
@@ -146,6 +152,32 @@ export function BidaTable({value, axis}: {value?: BidaDiagramValue; axis?: boole
           return <circle key={`${point.x}:${point.y}`} cx={at.x} cy={at.y} r={5} />
         })}
       </g>
+
+      {/* Mốc của từng con số: số đọc trên khung mà không trùng hạt kim cương
+          thật (nửa hạt) được 1 vòng rỗng trên khung; số đọc trên mép
+          cao su được 1 mũi tam giác chĩa vào bàn ngay tại điểm đó. */}
+      {labels.map((label, index) => {
+        if (!label.onRail || !label.color) return null
+        if (!label.inside) {
+          if (isDiamond(label.point)) return null
+          const at = pushed(label.point, portrait, DIAMOND_OFFSET)
+          return <circle key={index} cx={at.x} cy={at.y} r={4.5} fill="none" stroke="#f3ead8" strokeWidth={2} />
+        }
+        const fill = LABEL_COLORS[label.color]
+        const at = toSvg(label.point, portrait)
+        const out = outward(label.point, portrait)
+        // Góc bàn không có hướng vuông góc với băng → chấm tròn
+        if (out.x !== 0 && out.y !== 0) return <circle key={index} cx={at.x} cy={at.y} r={7} fill={fill} />
+        const tip = {x: at.x - out.x * 8, y: at.y - out.y * 8}
+        const base = {x: at.x + out.x * CUSHION, y: at.y + out.y * CUSHION}
+        return (
+          <polygon
+            key={index}
+            points={`${tip.x},${tip.y} ${base.x - out.y * 9},${base.y + out.x * 9} ${base.x + out.y * 9},${base.y - out.x * 9}`}
+            fill={fill}
+          />
+        )
+      })}
 
       {showAxis && (
         <g fill="currentColor" fontSize={24} textAnchor="middle" dominantBaseline="central">
@@ -258,7 +290,7 @@ export function BidaTable({value, axis}: {value?: BidaDiagramValue; axis?: boole
         {labels.map((label, index) => {
           const color = label.color && LABEL_COLORS[label.color]
           // Trên băng + có màu: ghi ra ngoài khung bàn, trên nền trang
-          if (label.onRail && color) {
+          if (label.onRail && color && !label.inside) {
             // Số ở góc bàn xếp thẳng cột với các số dọc băng dài, không đẩy chéo ra xa
             const onLongRail = label.point.y <= 0 || label.point.y >= TABLE_Y
             const anchor = onLongRail ? {x: Math.min(Math.max(label.point.x, 0.001), TABLE_X - 0.001), y: label.point.y} : label.point
@@ -282,7 +314,7 @@ export function BidaTable({value, axis}: {value?: BidaDiagramValue; axis?: boole
           }
           // Trên mặt nỉ + có màu: ô màu chữ trắng
           if (color) {
-            const at = toSvg(label.point, portrait)
+            const at = label.inside ? pushed(label.point, portrait, -INSIDE_OFFSET) : toSvg(label.point, portrait)
             const width = label.text.length * 15 + 16
             return (
               <g key={index} fontSize={24}>

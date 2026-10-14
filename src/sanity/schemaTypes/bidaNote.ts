@@ -163,7 +163,7 @@ export default defineType({
                       name: 'points',
                       title: 'Các điểm đi qua',
                       type: 'string',
-                      description: 'Lần lượt từng điểm, vd. 8,2.5 > 5,4 > 0,2.5 > 3,0. Điểm trên băng là x = 0/8 hoặc y = 0/4.',
+                      description: 'Lần lượt từng điểm, vd. 8,2.5 > 5,4 > 0,2.5 > 3,0. Điểm trên băng là x = 0/8 hoặc y = 0/4. Muốn vẽ đường ngắm vào hạt kim cương trên khung thì lùi ra 0.32, vd. 5,-0.32.',
                       validation: (Rule) =>
                         Rule.required().custom((value) =>
                           !value || parsePoints(value).length > 0 ? true : POINT_HELP,
@@ -215,7 +215,7 @@ export default defineType({
               type: 'text',
               rows: 6,
               description:
-                'Mỗi dòng 1 nhãn: "x,y chữ". Vd. "0,3 30" ghi số 30 cạnh kim cương thứ 3 băng ngắn bên trái. Thêm "@lam", "@xanh", "@đỏ", "@vàng" hoặc "@đen" ở cuối để tô màu, tách các bộ số với nhau: nhãn trên băng có màu được ghi ra ngoài khung bàn, nhãn trên mặt nỉ có màu thành ô màu.',
+                'Mỗi dòng 1 nhãn: "x,y chữ". Vd. "0,3 30" ghi số 30 cạnh kim cương thứ 3 băng ngắn bên trái. Thêm "@lam", "@xanh", "@đỏ", "@vàng" hoặc "@đen" ở cuối để tô màu, tách các bộ số với nhau: nhãn trên băng có màu được ghi ra ngoài khung bàn, nhãn trên mặt nỉ có màu thành ô màu. Số đọc trên mép cao su: thêm chữ "trong" sau màu, vd. "6,4 20 @đỏ trong" — ô số nằm trong bàn, có mũi tam giác đánh dấu trên mép băng.',
             }),
             defineField({
               name: 'zones',
