@@ -244,8 +244,8 @@ export function BidaTable({value, axis}: {value?: BidaDiagramValue; axis?: boole
         })
         const pull = endsOnBall ? BALL_R + 2 : 0
         const tip = {x: end.x - ux * pull, y: end.y - uy * pull}
-        const base = {x: tip.x - ux * 26, y: tip.y - uy * 26}
-        const line = [...svgPoints.slice(0, -1), {x: tip.x - ux * 20, y: tip.y - uy * 20}]
+        const base = {x: tip.x - ux * 18, y: tip.y - uy * 18}
+        const line = [...svgPoints.slice(0, -1), {x: tip.x - ux * 14, y: tip.y - uy * 14}]
 
         return (
           <g key={path.key}>
@@ -253,13 +253,13 @@ export function BidaTable({value, axis}: {value?: BidaDiagramValue; axis?: boole
               points={line.map((point) => `${point.x},${point.y}`).join(' ')}
               fill="none"
               stroke={stroke}
-              strokeWidth={5}
+              strokeWidth={3}
               strokeLinejoin="round"
               strokeLinecap="round"
-              strokeDasharray={path.dashed ? '16 14' : undefined}
+              strokeDasharray={path.dashed ? '11 9' : undefined}
             />
             <polygon
-              points={`${tip.x},${tip.y} ${base.x - uy * 11},${base.y + ux * 11} ${base.x + uy * 11},${base.y - ux * 11}`}
+              points={`${tip.x},${tip.y} ${base.x - uy * 6.5},${base.y + ux * 6.5} ${base.x + uy * 6.5},${base.y - ux * 6.5}`}
               fill={stroke}
             />
           </g>
