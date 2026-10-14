@@ -37,7 +37,8 @@ export function bidaCategoryTitle(value?: string) {
 export const TABLE_X = 8
 export const TABLE_Y = 4
 // Hạt kim cương nằm trên khung gỗ, lùi ra ngoài mép cao su chừng này. Đường
-// bi được phép chạy tới đó để vẽ đường ngắm xuyên qua băng vào đúng hạt.
+// bi được phép chạy tới đó để vẽ đường ngắm xuyên qua băng vào đúng hạt:
+// hạt băng dài nằm ở 0.27 (vd. 5,-0.27), hạt băng ngắn ở 0.32.
 export const FRAME_REACH = 0.32
 
 export type Pt = {x: number; y: number}
@@ -81,7 +82,7 @@ export function parsePoint(input?: string): Pt | null {
 
 // "1,1 > 8,2.5 > 5,4" → 3 điểm. Ngăn cách bằng gì cũng được (dấu cách, >, →),
 // chỉ cần mỗi điểm đúng dạng x,y. Điểm được phép lùi ra tới hàng kim cương
-// trên khung (vd. 5,-0.32) để vẽ đường ngắm vào hạt.
+// trên khung (vd. 5,-0.27) để vẽ đường ngắm vào hạt.
 export function parsePoints(input?: string): Pt[] {
   return [...(input ?? '').matchAll(new RegExp(POINT.source, 'g'))]
     .map((match) => ({x: Number(match[1]), y: Number(match[2])}))

@@ -163,7 +163,7 @@ export default defineType({
                       name: 'points',
                       title: 'Các điểm đi qua',
                       type: 'string',
-                      description: 'Lần lượt từng điểm, vd. 8,2.5 > 5,4 > 0,2.5 > 3,0. Điểm trên băng là x = 0/8 hoặc y = 0/4. Muốn vẽ đường ngắm vào hạt kim cương trên khung thì lùi ra 0.32, vd. 5,-0.32.',
+                      description: 'Lần lượt từng điểm, vd. 8,2.5 > 5,4 > 0,2.5 > 3,0. Điểm trên băng là x = 0/8 hoặc y = 0/4. Muốn vẽ đường ngắm vào hạt kim cương trên khung thì lùi ra 0.27 với băng dài (vd. 5,-0.27), 0.32 với băng ngắn.',
                       validation: (Rule) =>
                         Rule.required().custom((value) =>
                           !value || parsePoints(value).length > 0 ? true : POINT_HELP,
