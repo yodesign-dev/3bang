@@ -20,8 +20,10 @@ import {
 
 // 1 kim cương = 100 đơn vị SVG.
 const U = 100
-const CUSHION = 10
-const WOOD = 44
+// Băng cao su và khung nhôm, theo tỉ lệ bàn thi đấu. CUSHION + WOOD / 2 phải
+// bằng FRAME_REACH (lib/bida) để đường ngắm vẽ trong dữ liệu chạm đúng hạt.
+const CUSHION = 16
+const WOOD = 32
 const FRAME = CUSHION + WOOD
 const DIAMOND_OFFSET = CUSHION + WOOD / 2
 // Ô số đọc trên mép cao su nằm lùi vào trong bàn chừng này
@@ -129,9 +131,42 @@ export function BidaTable({value, axis}: {value?: BidaDiagramValue; axis?: boole
       className="block h-auto w-full text-neutral-500"
       fontFamily="ui-sans-serif, system-ui, sans-serif"
     >
-      <rect x={-FRAME} y={-FRAME} width={W + FRAME * 2} height={H + FRAME * 2} rx={18} fill="#4a2f1d" />
-      <rect x={-CUSHION} y={-CUSHION} width={W + CUSHION * 2} height={H + CUSHION * 2} fill="#1f5a94" />
-      <rect x={0} y={0} width={W} height={H} fill="#2b74b8" />
+      {/* Khung nhôm: 4 ô góc bo tròn (nền) + 4 thanh băng, mỗi thanh có 1 dải
+          sáng chạy dọc cho ra chất kim loại. Không dùng gradient vì sơ đồ nằm
+          trong tab đang ẩn sẽ làm hỏng tham chiếu gradient của các sơ đồ khác. */}
+      <rect x={-FRAME} y={-FRAME} width={W + FRAME * 2} height={H + FRAME * 2} rx={14} fill="#5f6573" />
+      {[
+        {x: -CUSHION, y: -FRAME, width: W + CUSHION * 2, height: WOOD},
+        {x: -CUSHION, y: H + CUSHION, width: W + CUSHION * 2, height: WOOD},
+        {x: -FRAME, y: -CUSHION, width: WOOD, height: H + CUSHION * 2},
+        {x: W + CUSHION, y: -CUSHION, width: WOOD, height: H + CUSHION * 2},
+      ].map((rail, index) => {
+        const lengthwise = rail.width > rail.height
+        return (
+          <g key={index}>
+            <rect {...rail} fill="#868a98" />
+            <rect
+              x={rail.x + (lengthwise ? 0 : WOOD * 0.2)}
+              y={rail.y + (lengthwise ? WOOD * 0.2 : 0)}
+              width={lengthwise ? rail.width : WOOD * 0.3}
+              height={lengthwise ? WOOD * 0.3 : rail.height}
+              fill="#a9adb9"
+              fillOpacity={0.55}
+            />
+          </g>
+        )
+      })}
+      <rect x={-CUSHION} y={-CUSHION} width={W + CUSHION * 2} height={H + CUSHION * 2} fill="#0b5cb5" />
+      <rect x={0} y={0} width={W} height={H} fill="#0353a8" />
+      {/* Bóng đổ dưới mép cao su */}
+      <rect x={4} y={4} width={W - 8} height={H - 8} fill="none" stroke="#002768" strokeOpacity={0.35} strokeWidth={8} />
+      {/* 3 điểm đặt bi trên trục dọc bàn */}
+      <g fill="#8ea8cd">
+        {[2, 4, 6].map((x) => {
+          const at = toSvg({x, y: TABLE_Y / 2}, portrait)
+          return <circle key={x} cx={at.x} cy={at.y} r={4} />
+        })}
+      </g>
 
       {parseZones(value?.zones).map((zone, index) => (
         <polygon
@@ -141,12 +176,12 @@ export function BidaTable({value, axis}: {value?: BidaDiagramValue; axis?: boole
             .map((at) => `${at.x},${at.y}`)
             .join(' ')}
           fill={ZONE_FILL[zone.color]}
-          stroke="#12406b"
+          stroke="#002768"
           strokeWidth={2}
         />
       ))}
 
-      <g fill="#f3ead8">
+      <g fill="#f7f8fa" stroke="#3b3f4a" strokeWidth={1.5}>
         {DIAMONDS.map(({point, from}) => {
           const at = toSvg(point, portrait)
           const out = outward(from, portrait)
@@ -169,7 +204,7 @@ export function BidaTable({value, axis}: {value?: BidaDiagramValue; axis?: boole
         if (!label.inside) {
           if (isDiamond(label.point)) return null
           const at = pushed(label.point, portrait, DIAMOND_OFFSET)
-          return <circle key={index} cx={at.x} cy={at.y} r={4.5} fill="none" stroke="#f3ead8" strokeWidth={2} />
+          return <circle key={index} cx={at.x} cy={at.y} r={4.5} fill="none" stroke="#ffffff" strokeWidth={2} />
         }
         const fill = LABEL_COLORS[label.color]
         const at = toSvg(label.point, portrait)
@@ -290,7 +325,7 @@ export function BidaTable({value, axis}: {value?: BidaDiagramValue; axis?: boole
         {hits.map((point, index) => {
           const at = pushed(point, portrait, -30)
           return (
-            <text key={index} x={at.x} y={at.y} fill="#ffffff" stroke="#12406b" strokeWidth={7}>
+            <text key={index} x={at.x} y={at.y} fill="#ffffff" stroke="#002768" strokeWidth={7}>
               {index + 1}
             </text>
           )
@@ -339,8 +374,8 @@ export function BidaTable({value, axis}: {value?: BidaDiagramValue; axis?: boole
               key={index}
               x={at.x}
               y={at.y}
-              fill={label.onRail ? '#fff3d6' : '#ffffff'}
-              stroke={label.onRail ? '#4a2f1d' : '#12406b'}
+              fill="#ffffff"
+              stroke={label.onRail ? '#3b3f4a' : '#002768'}
               strokeWidth={9}
             >
               {label.text}
